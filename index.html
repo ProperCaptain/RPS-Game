@@ -1,0 +1,171 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<title>RPS vs Bot - Fully Random Bot Choice</title>
+<style>
+  body {
+    font-family: Arial, sans-serif;
+    text-align: center;
+    padding: 2rem;
+    background: #222;
+    color: #eee;
+  }
+  h1 {
+    margin-bottom: 1rem;
+  }
+  .choices button {
+    font-size: 1.5rem;
+    margin: 0.5rem;
+    padding: 1rem 2rem;
+    cursor: pointer;
+    border-radius: 8px;
+    border: none;
+    background: #555;
+    color: #eee;
+    transition: background 0.3s;
+  }
+  .choices button:hover:enabled {
+    background: #09f;
+  }
+  #result {
+    margin-top: 2rem;
+    font-size: 1.3rem;
+    min-height: 4rem;
+  }
+  #score {
+    margin-top: 1rem;
+    font-size: 1.1rem;
+  }
+
+  #hands-container {
+    margin-top: 20px;
+    font-size: 5rem;
+    display: flex;
+    justify-content: space-between;
+    max-width: 300px;
+    margin-left: auto;
+    margin-right: auto;
+    height: 140px;
+    align-items: center;
+  }
+
+  .hand-wrapper {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+  }
+
+  .label {
+    font-size: 1.2rem;
+    margin-top: 0.3rem;
+    color: #ccc;
+  }
+</style>
+</head>
+<body>
+
+<h1>Rock-Paper-Scissors vs Bot</h1>
+
+<div class="choices">
+  <button onclick="play('rock')">🪨 Rock</button>
+  <button onclick="play('paper')">📄 Paper</button>
+  <button onclick="play('scissors')">✂️ Scissors</button>
+</div>
+
+<div id="hands-container">
+  <div class="hand-wrapper">
+    <div id="player-hand" class="hand">✋</div>
+    <div class="label">You</div>
+  </div>
+  <div class="hand-wrapper">
+    <div id="bot-hand" class="hand">✋</div>
+    <div class="label">Bot</div>
+  </div>
+</div>
+
+<div id="result"></div>
+<div id="score">Player: 0 | Bot: 0 | Ties: 0</div>
+
+<audio id="tick-sound" src="https://actions.google.com/sounds/v1/alarms/beep_short.ogg" preload="auto"></audio>
+
+<script>
+  let playerScore = 0;
+  let botScore = 0;
+  let ties = 0;
+  let buttons = document.querySelectorAll('.choices button');
+  const tickSound = document.getElementById('tick-sound');
+  const playerHand = document.getElementById('player-hand');
+  const botHand = document.getElementById('bot-hand');
+  const resultDiv = document.getElementById('result');
+  const scoreDiv = document.getElementById('score');
+
+  const handEmojis = {
+    rock: '✊',
+    paper: '✋',
+    scissors: '✌️'
+  };
+
+  function play(playerChoice) {
+    disableButtons(true);
+    resultDiv.textContent = '';
+    playerHand.textContent = handEmojis[playerChoice];
+    botHand.textContent = '✋'; // start with paper
+
+    const choices = ['rock', 'paper', 'scissors'];
+    
+    // Bot cycles random hands while "thinking"
+    let botThinkingInterval = setInterval(() => {
+      const randomChoice = choices[Math.floor(Math.random() * choices.length)];
+      botHand.textContent = handEmojis[randomChoice];
+    }, 300);
+
+    // Tick sound every 800ms
+    let tickInterval = setInterval(() => {
+      tickSound.currentTime = 0;
+      tickSound.play();
+    }, 800);
+
+    setTimeout(() => {
+      clearInterval(botThinkingInterval);
+      clearInterval(tickInterval);
+
+      // Pick final bot choice *fresh* each round
+      const botChoice = choices[Math.floor(Math.random() * choices.length)];
+      botHand.textContent = handEmojis[botChoice];
+      
+      // DEBUG: show final bot choice in console every round
+      console.log("Bot final choice:", botChoice);
+
+      // Determine winner
+      let result = '';
+      if (playerChoice === botChoice) {
+        result = "It's a tie!";
+        ties++;
+      } else if (
+        (playerChoice === 'rock' && botChoice === 'scissors') ||
+        (playerChoice === 'paper' && botChoice === 'rock') ||
+        (playerChoice === 'scissors' && botChoice === 'paper')
+      ) {
+        result = "You win!";
+        playerScore++;
+      } else {
+        result = "Bot wins!";
+        botScore++;
+      }
+
+      resultDiv.textContent = `You chose ${playerChoice.toUpperCase()}, Bot chose ${botChoice.toUpperCase()}. ${result}`;
+      scoreDiv.textContent = `Player: ${playerScore} | Bot: ${botScore} | Ties: ${ties}`;
+
+      disableButtons(false);
+    }, 3500);
+  }
+
+  function disableButtons(disable) {
+    buttons.forEach(btn => btn.disabled = disable);
+  }
+</script>
+
+</body>
+</html>
